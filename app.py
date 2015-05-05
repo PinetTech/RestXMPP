@@ -12,11 +12,15 @@
 
 # Imports
 from services import ServiceLocator
+import logging
 
+# Construct the APP
 app = ServiceLocator.Instance().app();
 
+# Start the APP
 try:
     app.setup()
     app.run()
 finally:
+    # Clean Up
     app.close()

@@ -20,6 +20,19 @@ You should have these configurations setup to run this client:
 4. Configure the host and port that RestXMPP http service to listen to
 5. Configure the control port that RestXMPP listen(to control the server)
 
+## Dependencies
+
+RestXMPP depends below libraries to provde the function:
+
+1. [cement](http://builtoncement.com/): This awesome framework provides a very nice(indeeded) cli application development foundation
+2. [xmpppy](http://xmpppy.sourceforge.net/): This framework provdes the foundations of XMPP services
+3. [requests](http://docs.python-requests.org/en/latest/index.html): This framework provids the http requests apis
+4. [pydns](http://pydns.sourceforge.net/): The dns resolving library used by [xmpppy](http://xmpppy.sourceforge.net/)
+
+You can use pip to install all of these depenencies by using this command
+    
+    pip install cement xmpppy requests
+
 ## Management
 
 To start the client, you just need to run command:

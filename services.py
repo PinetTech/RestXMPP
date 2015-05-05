@@ -11,27 +11,56 @@
 from cement.core import backend, foundation, controller, handler
 from cement.utils.misc import init_defaults
 from utils import Singleton
-from xmpp import RestServer, ControlServer
+from server import RestServer
 import requests
+import logging
 
-# The Base Controller
+# The Service Controller
 class ServiceController(controller.CementBaseController):
+    """
+    This is the Application Controller for the RestXMPP Application
+
+    @author Jack
+    @version 1.0
+    @date Tue May  5 13:14:35 2015
+    """
+
     class Meta:
         label = 'base'
         description = 'This is the control interface for RestXMPP server.'
 
     @controller.expose(hide=True, aliases=['run'])
     def default(self):
+        """
+        This is the default commmand when no command is set.
+        """
+
+        print logging.Logger.manager.loggerDict
         print self._usage_text
 
     @controller.expose(help='Start the RestXMPP service, if the service is already running, will skip')
     def start(self):
-        self.app.log.info('Starting Rest Server...')
-        ServiceLocator.Instance().rest().start()
-        self.app.log.info('Rest Server Started...')
+        """
+        This command will start the RestXMPP service
+        """
+
+        self.app.log.info('Starting RestXMPP Service...')
+        rest = ServiceLocator.Instance().rest()
+        if rest:
+            rest.start()
+            self.app.log.info('RestXMPP Started...')
+            # Waiting RestXMPP to stop
+            rest.join();
+            self.app.log.info('RestXMPP Stopped...')
+        else:
+            self.app.log.info('RestXMPP Start Failed')
 
     @controller.expose(help='Stop the RestXMPP Service, if the service is no running already, will skip')
     def stop(self):
+        """
+        This command will stop the RestXMPP Service
+        """
+
         self.app.log.info('Stopping RestXMPP Service...')
         port = self.app.config.get('xmpp', 'port')
         try:
@@ -76,6 +105,10 @@ class ServiceLocator:
             defaults = init_defaults('xmpp')
             defaults['xmpp']['host'] = 'localhost'
             defaults['xmpp']['port'] = 8080
+            defaults['xmpp']['jid'] = None
+            defaults['xmpp']['password'] = None
+            defaults['xmpp']['server'] = None
+            defaults['xmpp']['server_port'] = 5222
 
             # Initialize the application object
             self._app = App('xmpp', config_defaults=defaults)
@@ -87,6 +120,9 @@ class ServiceLocator:
         """
 
         return self.app().config
+
+    def log(self):
+        return self.app().log
     
     def rest(self):
         """
@@ -94,6 +130,21 @@ class ServiceLocator:
         """
 
         if self._rest == None:
+            config = self.config()
+            jid = config.get('xmpp', 'jid')
+            password = config.get('xmpp', 'password')
+            server = config.get('xmpp', 'server')
+            server_port = config.get('xmpp', 'server_port')
+            if not server:
+                self.log().info('Can\'t find jabber server configuration')
+                return None
+            if not jid:
+                self.log().info('Can\'t find jid configuration')
+                return None
+            if not password:
+                self.log().info('Can\'t find password configuration')
+                return None
+
             self._rest = RestServer(self.app().config.get('xmpp', 'host'),
-                    self.app().config.get('xmpp', 'port'))
+                    self.app().config.get('xmpp', 'port'), server, server_port, jid, password)
         return self._rest

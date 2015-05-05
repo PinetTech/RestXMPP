@@ -9,4 +9,4 @@
 #===============================================================================
 
 from rest import RestServer
-from control import ControlServer
+from client import Client

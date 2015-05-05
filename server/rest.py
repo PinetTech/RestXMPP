@@ -10,7 +10,9 @@
 
 # Imports
 import threading
+import logging
 import BaseHTTPServer
+from client import Client
 
 class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     rest = None
@@ -21,17 +23,25 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", 'text')
-        self.end_headers()
+        try:
+            self.send_response(200)
+            self.send_header("Content-type", 'text')
+            self.end_headers()
 
-        if self.path == '/control/close':
-            self.wfile.write('Shutting Down...')
-            ApiRequestHandler.rest.stop()
-        elif self.path == '/control/status':
-            self.wfile.write('Not implemented!')
-        else:
-            self.wfile.write('Path [%s] is not supported yet!' % self.path)
+            if self.path == '/control/stop':
+                self.wfile.write('Shutting Down...')
+                ApiRequestHandler.rest.stop()
+            elif self.path == '/control/status':
+                self.wfile.write('Not implemented!')
+            elif self.path == '/control/login':
+                self.rest._client.login()
+            else:
+                self.wfile.write('Path [%s] is not supported yet!' % self.path)
+
+        except Exception as ex:
+            self.send_response(400)
+            self.wfile.write(ex.args)
+            raise
 
 class RestServer(threading.Thread):
     """
@@ -43,7 +53,7 @@ class RestServer(threading.Thread):
     _host = None
     _port = 0;
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, server, server_port, jid, password):
         """
         The constructor for Rest Server
         """
@@ -52,6 +62,9 @@ class RestServer(threading.Thread):
         self._port = port
         ApiRequestHandler.rest = self
         self._server = BaseHTTPServer.HTTPServer((self._host, self._port), ApiRequestHandler)
+        self.log = logging.getLogger('rest')
+        self._client = Client(jid, password, server, server_port)
+        self.log.debug('Rest Server Initialized...')
 
     def stop(self):
         """
