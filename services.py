@@ -12,6 +12,7 @@ from cement.core import backend, foundation, controller, handler
 from cement.utils.misc import init_defaults
 from utils import Singleton
 from xmpp import RestServer, ControlServer
+import requests
 
 # The Base Controller
 class ServiceController(controller.CementBaseController):
@@ -25,12 +26,23 @@ class ServiceController(controller.CementBaseController):
 
     @controller.expose(help='Start the RestXMPP service, if the service is already running, will skip')
     def start(self):
-        self.app.log.info('Starting Control Server...')
-        ServiceLocator.Instance().control().start()
+        self.app.log.info('Starting Rest Server...')
+        ServiceLocator.Instance().rest().start()
+        self.app.log.info('Rest Server Started...')
 
     @controller.expose(help='Stop the RestXMPP Service, if the service is no running already, will skip')
     def stop(self):
-        self.app.log.info('Stopping RestXMPP Service')
+        self.app.log.info('Stopping RestXMPP Service...')
+        port = self.app.config.get('xmpp', 'port')
+        try:
+            r = requests.get('http://localhost:%s/control/close' % port)
+            if r.status_code == 200:
+                self.app.log.info('RestXMPP Service Stopped.')
+            else:
+                self.app.log.info('RestXMPP Service Stop Failed!')
+        except(requests.exceptions.ConnectionError):
+            self.app.log.info('RestXMPP Service Not Started!')
+
 
     @controller.expose(help='Check for the status of RestXMPP Service')
     def status(self):
@@ -64,8 +76,6 @@ class ServiceLocator:
             defaults = init_defaults('xmpp')
             defaults['xmpp']['host'] = 'localhost'
             defaults['xmpp']['port'] = 8080
-            defaults['xmpp']['control_host'] = '127.0.0.1'
-            defaults['xmpp']['control_port'] = 1080
 
             # Initialize the application object
             self._app = App('xmpp', config_defaults=defaults)
@@ -78,15 +88,6 @@ class ServiceLocator:
 
         return self.app().config
     
-    def control(self):
-        """
-        The Control Service
-        """
-        if self._control == None:
-            self._control = ControlServer(self.app().config.get('xmpp', 'control_host'),
-                    self.app().config.get('xmpp', 'control_port'))
-        return self._control
-
     def rest(self):
         """
         The Rest Service

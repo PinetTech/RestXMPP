@@ -9,17 +9,31 @@
 #===============================================================================
 
 # Imports
-import SimpleHTTPServer
-import SocketServer
+import threading
+import BaseHTTPServer
 
-class ApiRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    rest = None
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-type", 'text')
+        self.end_headers()
+
     def do_GET(self):
-        if self.path == '/':
-            print 'Hello'
-        else:
-            return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+        self.send_response(200)
+        self.send_header("Content-type", 'text')
+        self.end_headers()
 
-class RestServer(object):
+        if self.path == '/control/close':
+            self.wfile.write('Shutting Down...')
+            ApiRequestHandler.rest.stop()
+        elif self.path == '/control/status':
+            self.wfile.write('Not implemented!')
+        else:
+            self.wfile.write('Path [%s] is not supported yet!' % self.path)
+
+class RestServer(threading.Thread):
     """
     The Restful Http Server Thread
     """
@@ -33,23 +47,23 @@ class RestServer(object):
         """
         The constructor for Rest Server
         """
-        config = ServiceLocator.Instance().config()
+        threading.Thread.__init__(self)
         self._host = host
         self._port = port
-        self._server = SocketServer.TCPServer((self._host, self._port), ApiRequestHandler)
+        ApiRequestHandler.rest = self
+        self._server = BaseHTTPServer.HTTPServer((self._host, self._port), ApiRequestHandler)
 
     def stop(self):
         """
         Stop the Rest Server
         """
-        self.started = False
-        self._server.shutdown_request()
+        self._started = False
 
-
-    def start(self):
+    def run(self):
         """
         Start the Http Server
         """
         if not self._started:
             self._started = True
-            self._server.serve_forever()
+            while(self._started):
+                self._server.handle_request()
