@@ -12,6 +12,7 @@
 import threading
 import logging
 import BaseHTTPServer
+import cgi
 from client import Client
 
 class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -21,6 +22,34 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", 'text')
         self.end_headers()
+    def do_POST(self):
+        try:
+            self.send_response(200)
+            self.send_header("Content-type", 'text')
+            self.end_headers()
+
+            if self.path == '/xmpp/message':
+                ctype, pdict = cgi.parse_header(self.headers['content-type'])
+                if ctype == 'multipart/form-data':
+                    postvars = cgi.parse_multipart(self.rfile, pdict)
+                elif ctype == 'application/x-www-form-urlencoded':
+                    length = int(self.headers.getheader('content-length'))
+                    postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                else:
+                    postvars = {}
+                jid = postvars['jid'][0]
+                message = postvars['message'][0]
+                if self.rest._client.loggedin:
+                    self.rest._client.send_message(mto=jid, mbody=message)
+                    self.wfile.write('message [%s] to [%s] sent...' % (message, jid))
+                else:
+                    self.wfile.write('Please login first...')
+            else:
+                self.wfile.write('Path [%s] is not supported yet!' % self.path)
+        except Exception as ex:
+            self.send_response(400)
+            self.wfile.write(ex.args)
+            raise
 
     def do_GET(self):
         try:
@@ -33,8 +62,14 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 ApiRequestHandler.rest.stop()
             elif self.path == '/control/status':
                 self.wfile.write('Not implemented!')
+            elif self.path == '/xmpp/message':
+                self.wfile.write(self.path)
             elif self.path == '/control/login':
-                self.rest._client.login()
+                if self.rest._client.login():
+                    self.wfile.write('Login Successfully!')
+            elif self.path == '/control/logout':
+                if self.rest._client.disconnect():
+                    self.wfile.write('Logout Successfully!')
             else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
@@ -62,15 +97,17 @@ class RestServer(threading.Thread):
         self._port = port
         ApiRequestHandler.rest = self
         self._server = BaseHTTPServer.HTTPServer((self._host, self._port), ApiRequestHandler)
-        self.log = logging.getLogger('rest')
+        self.log = logging.getLogger('cement:app:xmpp')
         self._client = Client(jid, password, server, server_port)
-        self.log.debug('Rest Server Initialized...')
+        self.log.debug('Rest Server Initialized...', extra={'namespace': 'xmpp'})
 
     def stop(self):
         """
         Stop the Rest Server
         """
+        self.log.debug('Disconnecting XMPP Client...', extra={'namespace': 'xmpp'})
         self._started = False
+        self._client.disconnect()
 
     def run(self):
         """

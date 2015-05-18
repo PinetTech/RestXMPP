@@ -35,7 +35,6 @@ class ServiceController(controller.CementBaseController):
         This is the default commmand when no command is set.
         """
 
-        print logging.Logger.manager.loggerDict
         print self._usage_text
 
     @controller.expose(help='Start the RestXMPP service, if the service is already running, will skip')

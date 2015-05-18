@@ -14,10 +14,11 @@ from sleekxmpp.exceptions import IqError, IqTimeout
 import ssl
 import logging
 
-logger = logging.getLogger(__name__)
-logger.info('Hello world!')
-
 class Client(ClientXMPP):
+
+    class Meta:
+        label = 'client'
+
     """
     The XMPP Client
     """
@@ -36,14 +37,16 @@ class Client(ClientXMPP):
         self._server_port = server_port
         self._connection = None
         self._auth = None
-        self._log = logging.getLogger(__name__)
+        self.loggedin = False
+        self._log = logging.getLogger("cement:app:xmpp")
         self.ssl_version = ssl.PROTOCOL_SSLv3
-        self._log.info('XMPP client initialized...')
+        self._log.info('XMPP client initialized...', extra={'namespace' : 'xmpp'})
 
     def session_start(self, event):
         self.send_presence()
         try:
             self.get_roster()
+            self._log.info('Now sending the message...', extra={'namespace' : 'xmpp'})
         except IqError as err:
             self._log.error('There was an error getting the roster')
             self._log.error(err.iq['error']['condition'])
@@ -73,4 +76,5 @@ class Client(ClientXMPP):
         """
         self.connect()
         self.process()
+        self.loggedin = True
         return True
