@@ -14,6 +14,7 @@ import logging
 import BaseHTTPServer
 import cgi
 from client import Client
+import datetime
 
 class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     rest = None
@@ -61,7 +62,17 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write('Shutting Down...')
                 ApiRequestHandler.rest.stop()
             elif self.path == '/control/status':
-                self.wfile.write('Not implemented!')
+                self.wfile.write('host:         	%s\n' % self.rest._host)
+                self.wfile.write('h_port:       	%s\n' % self.rest._port)
+                self.wfile.write('login_status: 	%s\n' % self.rest._client.loggedin)
+                self.wfile.write('jid:          	%s\n' % self.rest._client.jid)
+                self.wfile.write('server:       	%s\n' % self.rest._client._server)
+                self.wfile.write('s_port:       	%s\n' % self.rest._client._server_port)
+                seconds = (datetime.datetime.now() - self.rest._starttime).seconds
+                self.wfile.write('run:          	%-3ddays %02d:%02d:%02d\n' % (seconds / 86400, (seconds % 86400) / 3600, (seconds % 3600) / 60, seconds % 60))
+
+
+                
             elif self.path == '/xmpp/message':
                 self.wfile.write(self.path)
             elif self.path == '/control/login':
@@ -112,6 +123,7 @@ class RestServer(threading.Thread):
     _server = None
     _host = None
     _port = 0;
+    _starttime = None
 
     def __init__(self, host, port, server, server_port, jid, password):
         """
@@ -125,6 +137,7 @@ class RestServer(threading.Thread):
         self.log = logging.getLogger('cement:app:xmpp')
         self._client = Client(jid, password, server, server_port)
         self.log.debug('Rest Server Initialized...', extra={'namespace': 'xmpp'})
+        self._starttime = datetime.datetime.now()
 
     def stop(self):
         """
