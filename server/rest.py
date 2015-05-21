@@ -70,6 +70,31 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif self.path == '/control/logout':
                 if self.rest._client.disconnect():
                     self.wfile.write('Logout Successfully!')
+            elif self.path == '/control/friends':
+                    self.rest._client.browse_roster()
+                    groups = self.rest._client._groups
+                    self.wfile.write('\nRoster\n')
+                    for group in groups:
+                        self.wfile.write('\n%s\n' % group)
+                        self.wfile.write('-' * 72)
+                        for jid in groups[group]:
+                            self.wfile.write('\n[jid]:%s\n'%jid)
+                            connections_items = self.rest._client._connections_items
+                            for res, pres in connections_items:
+                                self.wfile.write('\n victor debug\n' )
+                                show = 'available'
+                                if pres['show']:
+                                    show = pres['show']
+                                    #print('   - %s (%s)' % (res, show))
+                                    self.wfile.write('   - %s (%s)' % (res, show))
+                                else:
+                                    self.wfile.write(' \nnot found show\n')
+                                if pres['status']:
+                                    #print('       %s' % pres['status'])
+                                    self.wfile.write('       %s' % pres['status'])
+                                else:
+                                    self.wfile.write(' \nnot found status\n')
+                    
             else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
