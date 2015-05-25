@@ -82,25 +82,25 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if self.rest._client.disconnect():
                     self.wfile.write('Logout Successfully!')
             elif self.path == '/control/friends':
-        	self.log = logging.getLogger('cement:app:xmpp')
-        	self.log.debug('get friends...', extra={'namespace': 'xmpp'})
+                self.log = logging.getLogger('cement:app:xmpp')
+                self.log.debug('get friends...', extra={'namespace': 'xmpp'})
                 roster = self.rest._client.get_roster()
                 self.rest._client.send_presence()
-        	self.log.debug('\nRoster:%s\n' % roster, extra={'namespace': 'xmpp'})
+                self.log.debug('\nRoster:%s\n' % roster, extra={'namespace': 'xmpp'})
                 groups = self.rest._client.client_roster.groups()
-        	self.log.debug('\ngroups:%s  \n'% groups, extra={'namespace': 'xmpp'})
+                self.log.debug('\ngroups:%s  \n'% groups, extra={'namespace': 'xmpp'})
                 for group in groups:
                     if group!= '':
                     	self.wfile.write('\n[group]:%s\n' % group)
                     	self.wfile.write('-' * 72)
                         for jid in groups[group]:
                             self.wfile.write('\n[jid]:%s\n'%jid)
-			    self.log.debug('\n[jid]:%s\n'%jid, extra={'namespace': 'xmpp'})
+                            self.log.debug('\n[jid]:%s\n'%jid, extra={'namespace': 'xmpp'})
                             connections = self.rest._client.client_roster.presence(jid)
                             connections_items = connections.items()
-			    self.log.debug('\nconnections:%s\n\nconnections_items:%s\n\n\n' %(connections,connections_items), extra={'namespace': 'xmpp'})
+                            self.log.debug('\nconnections:%s\n\nconnections_items:%s\n\n\n' %(connections,connections_items), extra={'namespace': 'xmpp'})
                             for res, pres in connections_items:
-				self.log.debug('\nres:%s\n\npres:%s\n\nconnections_items:%s\n\njid:%s\n' %(res,pres,connections_items,jid), extra={'namespace': 'xmpp'})
+                                self.log.debug('\nres:%s\n\npres:%s\n\nconnections_items:%s\n\njid:%s\n' %(res,pres,connections_items,jid), extra={'namespace': 'xmpp'})
                                 show = 'available'
                                 if pres['show']:
                                     show = pres['show']
@@ -112,9 +112,9 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                                     self.log.debug('       %s' % pres['status'], extra={'namespace': 'xmpp'})
                                     self.wfile.write('      [status:] %s' % pres['status'])
                                 else:
-    				    self.log.debug('\nnot found status\n', extra={'namespace': 'xmpp'})
+                                    self.log.debug('\nnot found status\n', extra={'namespace': 'xmpp'})
                     else:
-    			self.log.debug('\ngroup empty!\n', extra={'namespace': 'xmpp'})
+                        self.log.debug('\ngroup empty!\n', extra={'namespace': 'xmpp'})
             else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
