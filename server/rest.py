@@ -62,14 +62,14 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write('Shutting Down...')
                 ApiRequestHandler.rest.stop()
             elif self.path == '/control/status':
-                self.wfile.write('host:         	%s\n' % self.rest._host)
-                self.wfile.write('h_port:       	%s\n' % self.rest._port)
-                self.wfile.write('login_status: 	%s\n' % self.rest._client.loggedin)
-                self.wfile.write('jid:          	%s\n' % self.rest._client.jid)
-                self.wfile.write('server:       	%s\n' % self.rest._client._server)
-                self.wfile.write('s_port:       	%s\n' % self.rest._client._server_port)
+                self.wfile.write('host:             %s\n' % self.rest._host)
+                self.wfile.write('h_port:           %s\n' % self.rest._port)
+                self.wfile.write('login_status:     %s\n' % self.rest._client.loggedin)
+                self.wfile.write('jid:              %s\n' % self.rest._client.jid)
+                self.wfile.write('server:           %s\n' % self.rest._client._server)
+                self.wfile.write('s_port:           %s\n' % self.rest._client._server_port)
                 seconds = (datetime.datetime.now() - self.rest._starttime).seconds
-                self.wfile.write('run:          	%-3ddays %02d:%02d:%02d\n' % (seconds / 86400, (seconds % 86400) / 3600, (seconds % 3600) / 60, seconds % 60))
+                self.wfile.write('run:              %-3ddays %02d:%02d:%02d\n' % (seconds / 86400, (seconds % 86400) / 3600, (seconds % 3600) / 60, seconds % 60))
 
 
                 
@@ -82,30 +82,12 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if self.rest._client.disconnect():
                     self.wfile.write('Logout Successfully!')
             elif self.path == '/control/friends':
-                    self.rest._client.browse_roster()
-                    groups = self.rest._client._groups
-                    self.wfile.write('\nRoster\n')
-                    for group in groups:
-                        self.wfile.write('\n%s\n' % group)
-                        self.wfile.write('-' * 72)
-                        for jid in groups[group]:
-                            self.wfile.write('\n[jid]:%s\n'%jid)
-                            connections_items = self.rest._client._connections_items
-                            for res, pres in connections_items:
-                                self.wfile.write('\n victor debug\n' )
-                                show = 'available'
-                                if pres['show']:
-                                    show = pres['show']
-                                    #print('   - %s (%s)' % (res, show))
-                                    self.wfile.write('   - %s (%s)' % (res, show))
-                                else:
-                                    self.wfile.write(' \nnot found show\n')
-                                if pres['status']:
-                                    #print('       %s' % pres['status'])
-                                    self.wfile.write('       %s' % pres['status'])
-                                else:
-                                    self.wfile.write(' \nnot found status\n')
-                    
+                self.control_friends('all')
+            elif self.path == '/control/friends:online':
+                self.control_friends('online')
+            elif self.path == '/control/friends:offline':
+                self.control_friends('offline')
+
             else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
@@ -113,6 +95,35 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response(400)
             self.wfile.write(ex.args)
             raise
+    def control_friends(self,status):
+        self.log = logging.getLogger('cement:app:xmpp')
+        self.log.debug('get friends...', extra={'namespace': 'xmpp'})
+        roster = self.rest._client.get_roster()
+        self.rest._client.send_presence()
+        self.log.debug('Roster:%s' % roster, extra={'namespace': 'xmpp'})
+        groups = self.rest._client.client_roster.groups()
+        self.log.debug('groups:%s'% groups, extra={'namespace': 'xmpp'})
+        for group in groups:
+            if group!= '':
+                self.log.debug('group name empty!', extra={'namespace': 'xmpp'})
+            self.wfile.write('\n[group]:%s\n' % group)
+            self.wfile.write('-' * 72)
+            for jid in groups[group]:
+                if jid == self.rest._client.jid:
+                    continue
+                connections = self.rest._client.client_roster.presence(jid)
+                self.log.debug('[jid]:%s'%jid, extra={'namespace': 'xmpp'})
+                if connections == {} :
+                    if status == 'offline' or status == 'all':
+                        self.wfile.write('\n[jid]:%s\n'%jid)
+                        self.wfile.write('      [status:] offline')
+                else:
+                    if status == 'online' or status == 'all':
+                        self.wfile.write('\n[jid]:%s\n'%jid)
+                        self.wfile.write('      [status:] online')
+                connections_items = connections.items()
+                self.log.debug('connections:%sconnections_items:%s' %(connections,connections_items), extra={'namespace': 'xmpp'})
+        
 
 class RestServer(threading.Thread):
     """
