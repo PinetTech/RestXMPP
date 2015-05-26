@@ -63,7 +63,7 @@ class ServiceController(controller.CementBaseController):
         self.app.log.info('Stopping RestXMPP Service...')
         port = self.app.config.get('xmpp', 'port')
         try:
-            r = requests.get('http://localhost:%s/control/close' % port)
+            r = requests.get('http://localhost:%s/control/stop' % port)
             if r.status_code == 200:
                 self.app.log.info('RestXMPP Service Stopped.')
             else:
