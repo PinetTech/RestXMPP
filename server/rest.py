@@ -62,14 +62,14 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write('Shutting Down...')
                 ApiRequestHandler.rest.stop()
             elif self.path == '/control/status':
-                self.wfile.write('host:         	%s\n' % self.rest._host)
-                self.wfile.write('h_port:       	%s\n' % self.rest._port)
-                self.wfile.write('login_status: 	%s\n' % self.rest._client.loggedin)
-                self.wfile.write('jid:          	%s\n' % self.rest._client.jid)
-                self.wfile.write('server:       	%s\n' % self.rest._client._server)
-                self.wfile.write('s_port:       	%s\n' % self.rest._client._server_port)
+                self.wfile.write('host:             %s\n' % self.rest._host)
+                self.wfile.write('h_port:           %s\n' % self.rest._port)
+                self.wfile.write('login_status:     %s\n' % self.rest._client.loggedin)
+                self.wfile.write('jid:              %s\n' % self.rest._client.jid)
+                self.wfile.write('server:           %s\n' % self.rest._client._server)
+                self.wfile.write('s_port:           %s\n' % self.rest._client._server_port)
                 seconds = (datetime.datetime.now() - self.rest._starttime).seconds
-                self.wfile.write('run:          	%-3ddays %02d:%02d:%02d\n' % (seconds / 86400, (seconds % 86400) / 3600, (seconds % 3600) / 60, seconds % 60))
+                self.wfile.write('run:              %-3ddays %02d:%02d:%02d\n' % (seconds / 86400, (seconds % 86400) / 3600, (seconds % 3600) / 60, seconds % 60))
 
 
                 
@@ -86,35 +86,41 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.log.debug('get friends...', extra={'namespace': 'xmpp'})
                 roster = self.rest._client.get_roster()
                 self.rest._client.send_presence()
-                self.log.debug('\nRoster:%s\n' % roster, extra={'namespace': 'xmpp'})
+                self.log.debug('Roster:%s' % roster, extra={'namespace': 'xmpp'})
                 groups = self.rest._client.client_roster.groups()
-                self.log.debug('\ngroups:%s  \n'% groups, extra={'namespace': 'xmpp'})
+                self.log.debug('groups:%s'% groups, extra={'namespace': 'xmpp'})
                 for group in groups:
                     if group!= '':
-                    	self.wfile.write('\n[group]:%s\n' % group)
-                    	self.wfile.write('-' * 72)
-                        for jid in groups[group]:
-                            self.wfile.write('\n[jid]:%s\n'%jid)
-                            self.log.debug('\n[jid]:%s\n'%jid, extra={'namespace': 'xmpp'})
-                            connections = self.rest._client.client_roster.presence(jid)
-                            connections_items = connections.items()
-                            self.log.debug('\nconnections:%s\n\nconnections_items:%s\n\n\n' %(connections,connections_items), extra={'namespace': 'xmpp'})
-                            for res, pres in connections_items:
-                                self.log.debug('\nres:%s\n\npres:%s\n\nconnections_items:%s\n\njid:%s\n' %(res,pres,connections_items,jid), extra={'namespace': 'xmpp'})
-                                show = 'available'
-                                if pres['show']:
-                                    show = pres['show']
-                                    self.log.debug('   - %s (%s)' % (res, show), extra={'namespace': 'xmpp'})
-                                    self.wfile.write('   - %s (%s)' % (res, show))
-                                else:
-                                    self.log.debug(' \nnot found show\n', extra={'namespace': 'xmpp'})
-                                if pres['status']:
-                                    self.log.debug('       %s' % pres['status'], extra={'namespace': 'xmpp'})
-                                    self.wfile.write('      [status:] %s' % pres['status'])
-                                else:
-                                    self.log.debug('\nnot found status\n', extra={'namespace': 'xmpp'})
-                    else:
-                        self.log.debug('\ngroup empty!\n', extra={'namespace': 'xmpp'})
+                        self.log.debug('group name empty!', extra={'namespace': 'xmpp'})
+                    self.wfile.write('\n[group]:%s\n' % group)
+                    self.wfile.write('-' * 72)
+                    for jid in groups[group]:
+                        self.wfile.write('\n[jid]:%s\n'%jid)
+                        self.log.debug('[jid]:%s'%jid, extra={'namespace': 'xmpp'})
+                        connections = self.rest._client.client_roster.presence(jid)
+                        if connections == {} :
+                            self.wfile.write('      [status:] offline')
+                        else:
+                            self.wfile.write('      [status:] online')
+                        connections_items = connections.items()
+                        self.log.debug('connections:%sconnections_items:%s' %(connections,connections_items), extra={'namespace': 'xmpp'})
+                        """
+                        for res, pres in connections_items:
+                            self.log.debug('res:%spres:%sconnections_items:%sjid:%s' %(res,pres,connections_items,jid), extra={'namespace': 'xmpp'})
+                            show = 'available'
+                            if pres['show']:
+                                show = pres['show']
+                                self.log.debug('   - %s (%s)' % (res, show), extra={'namespace': 'xmpp'})
+                                self.wfile.write('   - %s (%s)' % (res, show))
+                            else:
+                                self.log.debug('not found show', extra={'namespace': 'xmpp'})
+                            if pres['status'] != '':
+                                self.log.debug('[status]%s' % pres['status'], extra={'namespace': 'xmpp'})
+                                self.wfile.write('      [status:] online')
+                            else:
+                                self.log.debug('not found status', extra={'namespace': 'xmpp'})
+                                self.wfile.write('      [status:] offline')
+                        """
             else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
