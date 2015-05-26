@@ -104,7 +104,7 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             self.wfile.write('      [status:] online')
                         connections_items = connections.items()
                         self.log.debug('connections:%sconnections_items:%s' %(connections,connections_items), extra={'namespace': 'xmpp'})
-           else:
+            else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
         except Exception as ex:
