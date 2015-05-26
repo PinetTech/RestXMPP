@@ -82,28 +82,12 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if self.rest._client.disconnect():
                     self.wfile.write('Logout Successfully!')
             elif self.path == '/control/friends':
-                self.log = logging.getLogger('cement:app:xmpp')
-                self.log.debug('get friends...', extra={'namespace': 'xmpp'})
-                roster = self.rest._client.get_roster()
-                self.rest._client.send_presence()
-                self.log.debug('Roster:%s' % roster, extra={'namespace': 'xmpp'})
-                groups = self.rest._client.client_roster.groups()
-                self.log.debug('groups:%s'% groups, extra={'namespace': 'xmpp'})
-                for group in groups:
-                    if group!= '':
-                        self.log.debug('group name empty!', extra={'namespace': 'xmpp'})
-                    self.wfile.write('\n[group]:%s\n' % group)
-                    self.wfile.write('-' * 72)
-                    for jid in groups[group]:
-                        self.wfile.write('\n[jid]:%s\n'%jid)
-                        self.log.debug('[jid]:%s'%jid, extra={'namespace': 'xmpp'})
-                        connections = self.rest._client.client_roster.presence(jid)
-                        if connections == {} :
-                            self.wfile.write('      [status:] offline')
-                        else:
-                            self.wfile.write('      [status:] online')
-                        connections_items = connections.items()
-                        self.log.debug('connections:%sconnections_items:%s' %(connections,connections_items), extra={'namespace': 'xmpp'})
+                self.control_friends('all')
+            elif self.path == '/control/friends:online':
+                self.control_friends('online')
+            elif self.path == '/control/friends:offline':
+                self.control_friends('offline')
+
             else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
@@ -111,6 +95,35 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response(400)
             self.wfile.write(ex.args)
             raise
+    def control_friends(self,status):
+        self.log = logging.getLogger('cement:app:xmpp')
+        self.log.debug('get friends...', extra={'namespace': 'xmpp'})
+        roster = self.rest._client.get_roster()
+        self.rest._client.send_presence()
+        self.log.debug('Roster:%s' % roster, extra={'namespace': 'xmpp'})
+        groups = self.rest._client.client_roster.groups()
+        self.log.debug('groups:%s'% groups, extra={'namespace': 'xmpp'})
+        for group in groups:
+            if group!= '':
+                self.log.debug('group name empty!', extra={'namespace': 'xmpp'})
+            self.wfile.write('\n[group]:%s\n' % group)
+            self.wfile.write('-' * 72)
+            for jid in groups[group]:
+                if jid == self.rest._client.jid:
+                    continue
+                connections = self.rest._client.client_roster.presence(jid)
+                self.log.debug('[jid]:%s'%jid, extra={'namespace': 'xmpp'})
+                if connections == {} :
+                    if status == 'offline' or status == 'all':
+                        self.wfile.write('\n[jid]:%s\n'%jid)
+                        self.wfile.write('      [status:] offline')
+                else:
+                    if status == 'online' or status == 'all':
+                        self.wfile.write('\n[jid]:%s\n'%jid)
+                        self.wfile.write('      [status:] online')
+                connections_items = connections.items()
+                self.log.debug('connections:%sconnections_items:%s' %(connections,connections_items), extra={'namespace': 'xmpp'})
+        
 
 class RestServer(threading.Thread):
     """
