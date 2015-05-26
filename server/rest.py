@@ -76,11 +76,18 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif self.path == '/xmpp/message':
                 self.wfile.write(self.path)
             elif self.path == '/control/login':
-                if self.rest._client.login():
-                    self.wfile.write('Login Successfully!')
+                if self.rest._client.loggedin == False:
+                    if self.rest._client.login():
+                        self.wfile.write('Login Successfully!')
+                else:
+                    self.wfile.write('Login already!')
             elif self.path == '/control/logout':
-                if self.rest._client.disconnect():
+                if self.rest._client.loggedin == True:
+                    self.rest._client.disconnect(wait=True)
                     self.wfile.write('Logout Successfully!')
+                    self.rest._client.loggedin = False
+                else:
+                    self.wfile.write('Logout already!')
             elif self.path == '/control/friends':
                 self.control_friends('all')
             elif self.path == '/control/friends:online':
