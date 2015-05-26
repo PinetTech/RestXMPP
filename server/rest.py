@@ -104,24 +104,7 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             self.wfile.write('      [status:] online')
                         connections_items = connections.items()
                         self.log.debug('connections:%sconnections_items:%s' %(connections,connections_items), extra={'namespace': 'xmpp'})
-                        """
-                        for res, pres in connections_items:
-                            self.log.debug('res:%spres:%sconnections_items:%sjid:%s' %(res,pres,connections_items,jid), extra={'namespace': 'xmpp'})
-                            show = 'available'
-                            if pres['show']:
-                                show = pres['show']
-                                self.log.debug('   - %s (%s)' % (res, show), extra={'namespace': 'xmpp'})
-                                self.wfile.write('   - %s (%s)' % (res, show))
-                            else:
-                                self.log.debug('not found show', extra={'namespace': 'xmpp'})
-                            if pres['status'] != '':
-                                self.log.debug('[status]%s' % pres['status'], extra={'namespace': 'xmpp'})
-                                self.wfile.write('      [status:] online')
-                            else:
-                                self.log.debug('not found status', extra={'namespace': 'xmpp'})
-                                self.wfile.write('      [status:] offline')
-                        """
-            else:
+           else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
 
         except Exception as ex:
