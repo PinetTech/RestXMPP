@@ -147,7 +147,7 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         self.wfile.write('\n[status]:           online')
                         self.wfile.write('\n[subscription]:     %s'%subscription)
                     connections_items = connections.items()
-                    self.log.debug('connections:%sconnections_items:%s' %(connections,connections_items), extra={'namespace': 'xmpp'})
+                    self.log.debug('connections_items:%s' %connections_items, extra={'namespace': 'xmpp'})
             if group_empty_flag :
                 self.wfile.write('\n no results in this group!')
 
