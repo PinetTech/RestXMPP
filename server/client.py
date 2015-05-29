@@ -39,9 +39,17 @@ class Client(ClientXMPP):
         self._connection = None
         self._auth = None
         self.loggedin = False
+        self.joinmuc = False
         self._log = logging.getLogger("cement:app:xmpp")
         self.ssl_version = ssl.PROTOCOL_SSLv3
         self._log.info('XMPP client initialized...', extra={'namespace' : 'xmpp'})
+        
+        self.register_plugin('xep_0030') # Service Discovery
+        self.register_plugin('xep_0045') # Multi-User Chat
+        self.register_plugin('xep_0199') # XMPP Ping
+        #Adapt the value of self.room when you test the conference
+        self.room = "pinet@conference.localhost"
+        self.nick = "test1"
 
     def session_start(self, event):
         self.send_presence()
@@ -69,6 +77,13 @@ class Client(ClientXMPP):
         """
         if msg['type'] in ('chat', 'normal'):
             msg.reply("Thanks for sending\n%(body)s" % msg).send()
+
+        elif msg['type'] == 'groupchat':
+            self._log.info('Receive groupchat message:%s' %msg, extra={'namespace' : 'xmpp'})
+            if msg['mucnick'] != self.nick:
+                self.send_message(mto=msg['from'].bare,
+                                  mbody="I heard that, %s." % msg['mucnick'],
+                                  mtype='groupchat')
     
 
     def login(self):
@@ -101,3 +116,11 @@ class Client(ClientXMPP):
                            ptype='unsubscribed')
             self._log.info('jid:%s unsubscribed '%jid_from,extra={'namespace' : 'xmpp'})
 
+    def join_muc(self):
+        self.plugin['xep_0045'].joinMUC(self.room,
+                                        self.nick,
+                                        # If a room password is needed, use:
+                                        # password=the_room_password,
+                                        wait=True)
+        self._log.info('JoinMUC, room:%s' %self.room, extra={'namespace' : 'xmpp'})
+        

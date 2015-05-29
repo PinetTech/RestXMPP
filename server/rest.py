@@ -86,6 +86,7 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     self.rest._client.disconnect(wait=True)
                     self.wfile.write('Logout Successfully!')
                     self.rest._client.loggedin = False
+                    self.rest._client.joinmuc = False
                 else:
                     self.wfile.write('Logout already!')
             elif self.path == '/control/friends':
@@ -103,6 +104,18 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     self.wfile.write('Login first!')
                 else:
                     self.control_friends('offline')
+				
+            elif self.path == '/control/join':
+                if self.rest._client.loggedin == False:
+                    self.wfile.write('Login first!')
+                else:
+                    if self.rest._client.joinmuc == False:
+                        self.rest._client.join_muc()
+                        self.wfile.write('Join muc Successfully!')
+                        self.rest._client.joinmuc = True
+                    else:
+                        self.wfile.write('Joined already!')
+                        
 
             else:
                 self.wfile.write('Path [%s] is not supported yet!' % self.path)
