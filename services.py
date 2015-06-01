@@ -108,6 +108,8 @@ class ServiceLocator:
             defaults['xmpp']['password'] = None
             defaults['xmpp']['server'] = None
             defaults['xmpp']['server_port'] = 5222
+            defaults['xmpp']['friend_pattern'] = 'pinet.cc' 
+            defaults['xmpp']['friend_default_group'] = 'pinet_friends'
 
             # Initialize the application object
             self._app = App('xmpp', config_defaults=defaults)
@@ -134,6 +136,8 @@ class ServiceLocator:
             password = config.get('xmpp', 'password')
             server = config.get('xmpp', 'server')
             server_port = config.get('xmpp', 'server_port')
+            friend_pattern = config.get('xmpp', 'friend_pattern')
+            group = config.get('xmpp', 'friend_default_group')
             if not server:
                 self.log().info('Can\'t find jabber server configuration')
                 return None
@@ -145,5 +149,5 @@ class ServiceLocator:
                 return None
 
             self._rest = RestServer(self.app().config.get('xmpp', 'host'),
-                    self.app().config.get('xmpp', 'port'), server, server_port, jid, password)
+                    self.app().config.get('xmpp', 'port'), server, server_port, jid, password,friend_pattern,group) 
         return self._rest

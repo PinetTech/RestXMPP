@@ -13,7 +13,6 @@ from sleekxmpp import ClientXMPP
 from sleekxmpp.exceptions import IqError, IqTimeout
 import ssl
 import logging
-
 class Client(ClientXMPP):
 
     class Meta:
@@ -23,7 +22,7 @@ class Client(ClientXMPP):
     The XMPP Client
     """
     
-    def __init__(self, jid, password, server, server_port):
+    def __init__(self, jid, password, server, server_port,friend_pattern,group):
         """
         The constructor of the XMPP Client
         """
@@ -36,6 +35,8 @@ class Client(ClientXMPP):
         self._password = password
         self._server = server
         self._server_port = server_port
+        self._friend_pattern= friend_pattern 
+        self._friend_default_group = group 
         self._connection = None
         self._auth = None
         self.loggedin = False
@@ -48,7 +49,7 @@ class Client(ClientXMPP):
         self.register_plugin('xep_0045') # Multi-User Chat
         self.register_plugin('xep_0199') # XMPP Ping
         #Adapt the value of self.room when you test the conference
-        self.room = "pinet@conference.localhost"
+        self.room = "misc@conference.pinet.cc"
         self.nick = "test1"
 
     def session_start(self, event):
@@ -98,17 +99,29 @@ class Client(ClientXMPP):
     def subscribe(self, pres):
         """
         handle the friend's addaaaaaaing and subscription request
-        1.filtering friends according to the [friend_pattern],undetermined 
-        2.[friend_default_group]:'pinet'
+        1.filtering friends according to the [friend_pattern],in cement config file
+        2.[friend_default_group],in cement config file
         """
+        domain = self._friend_pattern
+        if domain == None:
+            self._log.info('domain: is not configured', extra={'namespace' : 'xmpp'})
+        else:
+            self._log.info('domain:%s' %domain, extra={'namespace' : 'xmpp'})
+        
+        group = self._friend_default_group
+        if group == None:
+            self._log.info('group: is not configured', extra={'namespace' : 'xmpp'})
+        else:
+            self._log.info('group:%s' %group, extra={'namespace' : 'xmpp'})
+
         jid_from = pres['from']
-        if  jid_from.domain == 'localhost' and jid_from.username != 'user_abc':
+        if  jid_from.domain == domain:
             self.auto_authorize = True
             self.auto_subscribe = True
             self.send_presence(pto=pres['from'],
                            ptype='subscribed')
             self._log.info('jid:%s subscribed '%jid_from,extra={'namespace' : 'xmpp'})
-            self.update_roster(pres['from'], name=jid_from.username, groups=['pinet'])
+            self.update_roster(pres['from'], name=jid_from.username, groups=[group])
         else :
             self.auto_authorize = False 
             self.auto_subscribe = False
