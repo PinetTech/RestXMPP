@@ -11,8 +11,10 @@
 # Imports
 from sleekxmpp import ClientXMPP
 from sleekxmpp.exceptions import IqError, IqTimeout
+from callback_hdl import callback_handle
 import ssl
 import logging
+import json
 
 class Client(ClientXMPP):
 
@@ -30,7 +32,7 @@ class Client(ClientXMPP):
 
         ClientXMPP.__init__(self, jid, password)
         self.add_event_handler("session_start", self.session_start)
-        self.add_event_handler("message", self.message)
+        self.add_event_handler("message", self.message, threaded=True)
         self.add_event_handler('presence_subscribe',
                                self.subscribe)
         self._password = password
@@ -48,8 +50,8 @@ class Client(ClientXMPP):
         self.register_plugin('xep_0045') # Multi-User Chat
         self.register_plugin('xep_0199') # XMPP Ping
         #Adapt the value of self.room when you test the conference
-        self.room = "pinet@conference.localhost"
-        self.nick = "test1"
+        self.room = "misc@conference.pinet.cc"
+        self.nick = "test2"
 
     def session_start(self, event):
         self.send_presence()
@@ -76,6 +78,10 @@ class Client(ClientXMPP):
                    how it may be used.
         """
         if msg['type'] in ('chat', 'normal'):
+            msg_decode = msg['body'].decode('utf-8')
+            self._log.debug('Receive msg_decode:%s' %msg_decode, extra={'namespace' : 'xmpp'})
+            data = json.loads(msg_decode)
+            callback_handle(data)
             msg.reply("Thanks for sending\n%(body)s" % msg).send()
 
         elif msg['type'] == 'groupchat':
@@ -102,7 +108,7 @@ class Client(ClientXMPP):
         2.[friend_default_group]:'pinet'
         """
         jid_from = pres['from']
-        if  jid_from.domain == 'localhost' and jid_from.username != 'user_abc':
+        if  (jid_from.domain == 'pinet.cc' or jid_from.domain == 'localhost') and jid_from.username != 'user_abc':
             self.auto_authorize = True
             self.auto_subscribe = True
             self.send_presence(pto=pres['from'],
@@ -123,4 +129,7 @@ class Client(ClientXMPP):
                                         # password=the_room_password,
                                         wait=True)
         self._log.info('JoinMUC, room:%s' %self.room, extra={'namespace' : 'xmpp'})
+
+
+
         
