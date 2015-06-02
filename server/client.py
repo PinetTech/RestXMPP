@@ -11,8 +11,11 @@
 # Imports
 from sleekxmpp import ClientXMPP
 from sleekxmpp.exceptions import IqError, IqTimeout
+from callback_hdl import callback_handle
 import ssl
 import logging
+import json
+
 class Client(ClientXMPP):
 
     class Meta:
@@ -29,7 +32,7 @@ class Client(ClientXMPP):
 
         ClientXMPP.__init__(self, jid, password)
         self.add_event_handler("session_start", self.session_start)
-        self.add_event_handler("message", self.message)
+        self.add_event_handler("message", self.message, threaded=True)
         self.add_event_handler('presence_subscribe',
                                self.subscribe)
         self._password = password
@@ -77,6 +80,10 @@ class Client(ClientXMPP):
                    how it may be used.
         """
         if msg['type'] in ('chat', 'normal'):
+            msg_decode = msg['body'].decode('utf-8')
+            self._log.debug('Receive msg_decode:%s' %msg_decode, extra={'namespace' : 'xmpp'})
+            data = json.loads(msg_decode)
+            callback_handle(data)
             msg.reply("Thanks for sending\n%(body)s" % msg).send()
 
         elif msg['type'] == 'groupchat':
@@ -137,3 +144,6 @@ class Client(ClientXMPP):
                                         wait=True)
         self._log.info('JoinMUC, room:%s' %self.room, extra={'namespace' : 'xmpp'})
         
+
+
+
