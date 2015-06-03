@@ -83,8 +83,11 @@ class Client(ClientXMPP):
             msg_decode = msg['body'].decode('utf-8')
             self._log.debug('Receive msg_decode:%s' %msg_decode, extra={'namespace' : 'xmpp'})
             data = json.loads(msg_decode)
-            callback_handle(data)
-            msg.reply("Thanks for sending\n%(body)s" % msg).send()
+            result = callback_handle(data)
+            data['result'] = result
+            msg.reply("\n%s" % data).send()
+            #msg.reply("Thanks for sending\n%(body)s" % msg).send()
+            
 
         elif msg['type'] == 'groupchat':
             self._log.info('Receive groupchat message:%s' %msg, extra={'namespace' : 'xmpp'})

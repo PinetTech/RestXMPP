@@ -31,13 +31,16 @@ def callback_handle(args):
         c = callback_class()
         try:
             function = getattr(c, str(f))
-            function(arg)
+            result = function(arg)
             
         except AttributeError:
             log.error("No functon named %s found!" %f, extra={'namespace' : 'xmpp'})
+            result = 'funtion error!'
             
     except ImportError:
         log.error("No callback named %s found!" %m, extra={'namespace' : 'xmpp'})
+        result = 'callback error!'
+    return result
 
 
 
