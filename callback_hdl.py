@@ -13,10 +13,10 @@ import sys
 import importlib
 import logging
 
-log = logging.getLogger("cement:app:xmpp")
 
 
 def callback_handle(args):
+    log = logging.getLogger("cement:app:xmpp")
     t = args.get('type', 'not found')
     m = args.get('module', 'not found')
     f = args.get('function', 'not found')
@@ -26,7 +26,21 @@ def callback_handle(args):
     
     try:
         module = __import__("callbacks." + m)
+    except ImportError:
+        log.error("No callback named %s found!" %m, extra={'namespace' : 'xmpp'})
+        result = 'No callback named %s found!' %m
+        return result 
+    try:
         module = getattr(module, m)
+    except AttributeError:
+        log.error("get attr: %s error!" %m, extra={'namespace' : 'xmpp'})
+        result = 'get attr: %s error!' %m
+        return result 
+    except :
+        log.error("unknow error! module:%s" %m, extra={'namespace' : 'xmpp'})
+        result = ' unknow error module1'
+        return result 
+    try:
         callback_class = getattr(module, m.capitalize())
         c = callback_class()
         try:
@@ -35,11 +49,16 @@ def callback_handle(args):
             
         except AttributeError:
             log.error("No functon named %s found!" %f, extra={'namespace' : 'xmpp'})
-            result = 'funtion error!'
+            result = 'No functon named %s found!' %f
+        except :
+            result = ' unknow error module3'
             
-    except ImportError:
-        log.error("No callback named %s found!" %m, extra={'namespace' : 'xmpp'})
-        result = 'callback error!'
+    except AttributeError:
+        log.error("get attr: %s error!" %m, extra={'namespace' : 'xmpp'})
+        result = 'get attr: %s error!' %m
+    except :
+        log.error("unknow error! module:%s" %m, extra={'namespace' : 'xmpp'})
+        result = ' unknow error module2'
     return result
 
 
