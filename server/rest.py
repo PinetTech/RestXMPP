@@ -176,7 +176,7 @@ class RestServer(threading.Thread):
     _port = 0;
     _starttime = None
 
-    def __init__(self, host, port, server, server_port, jid, password,friend_pattern,group):
+    def __init__(self, host, port, server, server_port, jid, password, friend_pattern, group):
         """
         The constructor for Rest Server
         """

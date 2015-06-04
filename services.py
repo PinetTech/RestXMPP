@@ -149,5 +149,5 @@ class ServiceLocator:
                 return None
 
             self._rest = RestServer(self.app().config.get('xmpp', 'host'),
-                    self.app().config.get('xmpp', 'port'), server, server_port, jid, password,friend_pattern,group) 
+                    self.app().config.get('xmpp', 'port'), server, server_port, jid, password, friend_pattern, group) 
         return self._rest
