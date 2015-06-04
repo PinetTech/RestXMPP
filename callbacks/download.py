@@ -17,16 +17,17 @@ class Download(Callback):
         ok_hdl = args.get('ok_hdl', 'not found')
         err_hdl = args.get('err_hdl', 'not found')
 
-        cmd = 'cd %s ; wget %s%s'%(path,url,filename)
-        self.log.info('cmd%s  '%cmd, extra={'namespace' : 'xmpp'})
+        cmd = 'cd %s ; wget -t 5 -T 20 -c %s%s'%(path,url,filename)
+        self.log.debug('cmd:%s  '%cmd, extra={'namespace' : 'xmpp'})
+        self.log.info('downloading ...', extra={'namespace' : 'xmpp'})
         (status, output) = commands.getstatusoutput(cmd)
-        self.log.info('status:%s  \n< output:%s>\n'%(status,output), extra={'namespace' : 'xmpp'})
+        self.log.debug('[status]:%s  [output]:%s'%(status,output), extra={'namespace' : 'xmpp'})
         if status != 0:
             result = 'wget error!'
         else :
             cmd = 'cd %s ; md5sum %s |cut -d \' \' -f1'%(path,filename)
             (status, output) = commands.getstatusoutput(cmd)
-            self.log.info('status:%s  \n< output:%s>\n'%(status,output), extra={'namespace' : 'xmpp'})
+            self.log.debug('[status]:%s  [output]:%s'%(status,output), extra={'namespace' : 'xmpp'})
 
             if output == md5:
                 process = getattr(self,ok_hdl)
