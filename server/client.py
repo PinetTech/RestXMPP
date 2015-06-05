@@ -82,7 +82,18 @@ class Client(ClientXMPP):
         if msg['type'] in ('chat', 'normal'):
             msg_decode = msg['body'].decode('utf-8')
             self._log.debug('Receive msg_decode:%s' %msg_decode, extra={'namespace' : 'xmpp'})
-            data = json.loads(msg_decode)
+            try:
+                eval(msg_decode)
+            except Exception,e :
+                self._log.debug('is not json!!', extra={'namespace' : 'xmpp'})
+                msg.reply("%s : is not json format!" % msg_decode).send()
+                return
+            try:
+                data = json.loads(msg_decode)
+            except TypeError, err:
+                self._log.debug('error:%s' %err, extra={'namespace' : 'xmpp'})
+                msg.reply("error:%s" % err).send()
+                return
             result = callback_handle(data)
             data[u'result'] = result.decode('utf-8')
             encodedjson = json.dumps(data)
@@ -96,7 +107,7 @@ class Client(ClientXMPP):
                 self.send_message(mto=msg['from'].bare,
                                   mbody="I heard that, %s." % msg['mucnick'],
                                   mtype='groupchat')
-    
+        return 
 
     def login(self):
         """
