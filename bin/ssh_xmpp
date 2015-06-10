@@ -1,0 +1,19 @@
+#!/bin/bash
+
+main(){
+echo Starting  to ssh connect
+selfPID="$$"
+echo $selfPID 
+existingPid=`getSshPid $selfPID`
+echo "existingPid:" $existingPid
+kill -9 $existingPid
+ssh -R $1:localhost:$2 $3 -NT -f &
+echo Done
+}
+
+getSshPid(){
+selfPID=$1
+ps -ef |grep 'ssh -R'|grep -v "grep" | awk '{ if($3!='$selfPID'){ print $2 }}' 
+}
+
+main $*
