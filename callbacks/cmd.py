@@ -14,7 +14,7 @@ class Cmd(Callback):
         self.log.debug('cmd:%s  '%cmd, extra={'namespace' : 'xmpp'})
         if cmd != 'not found':
             (status, output) = commands.getstatusoutput(cmd)
-            self.log.debug('[status]:%s  [output]:%s'%(status,output), extra={'namespace' : 'xmpp'})
+            self.log.debug('[status]:%s  [output]:%s'%(status, output), extra={'namespace' : 'xmpp'})
             if status != 0:
                 result = 'cmd execute error!'
             else :
@@ -31,7 +31,7 @@ class Cmd(Callback):
         on_port = args.get('on_port', '9090')
         connect_to_host = args.get('connect_to_host', 'ibox@www.pinet.cc')
         path = '/usr/local/src/RestXMPP/bin/'
-        cmd = 'cd %s ; sh ssh_xmpp %s %s %s '%(path,on_port,source_port,connect_to_host) 
+        cmd = 'cd %s ; sh ssh_xmpp %s %s %s '%(path, on_port, source_port, connect_to_host) 
         self.log.debug('cmd:%s  '%cmd, extra={'namespace' : 'xmpp'})
         os.system(cmd)
         result = 'OK SSH Tunnel'
