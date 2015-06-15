@@ -1,0 +1,59 @@
+#!/bin/bash
+
+
+# Prepare the configurations
+path=/home/kallun/XMPP/RestXMPP/
+pid=/run/restxmpp.pid
+
+start() {
+	echo Starting restxmpp service
+
+  	cd   $path
+	python ./app.py start &
+
+	if [ -r $pid ]; then
+	    echo exist
+	else
+	    echo $! > $pid
+	fi
+
+	echo Done
+}
+
+
+
+stop() {
+	if [ -r $pid ]; then
+		echo Stoping restxmpp service
+		cd $path
+		python ./app.py stop
+
+		appid=$(cat $pid)
+		kill -0 $appid 1> /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			kill -9 $appid 
+		else
+			echo Stop ok 
+		fi
+		rm -f $pid 
+		echo Done
+	else
+		echo restxmpp service is not running....
+	fi
+}
+
+case $1 in
+
+start)
+	start
+	;;
+stop)
+	stop
+	;;
+restart)
+	stop
+	start
+	;;
+*)
+	echo "usage restxmpp start|stop"
+esac
