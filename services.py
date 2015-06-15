@@ -45,6 +45,7 @@ class ServiceController(controller.CementBaseController):
 
         self.app.log.info('Starting RestXMPP Service...')
         rest = ServiceLocator.Instance().rest()
+        self.app.log.info('rest:%s...'%(rest))
         if rest:
             rest.start()
             self.app.log.info('RestXMPP Started...')
@@ -110,6 +111,8 @@ class ServiceLocator:
             defaults['xmpp']['server_port'] = 5222
             defaults['xmpp']['friend_pattern'] = 'pinet.cc' 
             defaults['xmpp']['friend_default_group'] = 'pinet_friends'
+            defaults['xmpp']['room'] = "misc@conference.pinet.cc"
+            defaults['xmpp']['nick'] = "test1" 
 
             # Initialize the application object
             self._app = App('xmpp', config_defaults=defaults)
@@ -132,12 +135,16 @@ class ServiceLocator:
 
         if self._rest == None:
             config = self.config()
+            self.log().info('config:%s'%config)
             jid = config.get('xmpp', 'jid')
             password = config.get('xmpp', 'password')
             server = config.get('xmpp', 'server')
             server_port = config.get('xmpp', 'server_port')
             friend_pattern = config.get('xmpp', 'friend_pattern')
             group = config.get('xmpp', 'friend_default_group')
+            room = config.get('xmpp', 'room')
+            nick = config.get('xmpp', 'nick')
+            self.log().info('jid:%s password:%s server:%s server_port:%s friend_pattern:%s group:%s room:%s nick:%s'%(jid, password, server, server_port, friend_pattern, group, room, nick))
             if not server:
                 self.log().info('Can\'t find jabber server configuration')
                 return None
@@ -148,6 +155,10 @@ class ServiceLocator:
                 self.log().info('Can\'t find password configuration')
                 return None
 
-            self._rest = RestServer(self.app().config.get('xmpp', 'host'),
-                    self.app().config.get('xmpp', 'port'), server, server_port, jid, password, friend_pattern, group) 
+            host = self.app().config.get('xmpp', 'host')
+            port_str = self.app().config.get('xmpp', 'port')
+            port =  int(port_str)
+            self.log().info('host:%s port :%s'%(host, port ))
+            self._rest = RestServer(host,port, server, server_port, jid, password, friend_pattern, group, room, nick) 
+            self.log().info('self._rest:%s '%(self._rest))
         return self._rest

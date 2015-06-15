@@ -25,7 +25,7 @@ class Client(ClientXMPP):
     The XMPP Client
     """
     
-    def __init__(self, jid, password, server, server_port,friend_pattern,group):
+    def __init__(self, jid, password, server, server_port, friend_pattern, group, room, nick):
         """
         The constructor of the XMPP Client
         """
@@ -52,8 +52,8 @@ class Client(ClientXMPP):
         self.register_plugin('xep_0045') # Multi-User Chat
         self.register_plugin('xep_0199') # XMPP Ping
         #Adapt the value of self.room when you test the conference
-        self.room = "misc@conference.pinet.cc"
-        self.nick = "test1"
+        self.room = room 
+        self.nick = nick 
 
     def session_start(self, event):
         self.send_presence()

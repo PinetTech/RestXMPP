@@ -59,7 +59,7 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.end_headers()
 
             if self.path == '/control/stop':
-                self.wfile.write('Shutting Down...')
+                self.wfile.write('Shutting Down...\n')
                 ApiRequestHandler.rest.stop()
             elif self.path == '/control/status':
                 self.wfile.write('host:             %s\n' % self.rest._host)
@@ -78,47 +78,47 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             elif self.path == '/control/login':
                 if self.rest._client.loggedin == False:
                     if self.rest._client.login():
-                        self.wfile.write('Login Successfully!')
+                        self.wfile.write('Login Successfully!\n')
                 else:
-                    self.wfile.write('Login already!')
+                    self.wfile.write('Login already!\n')
             elif self.path == '/control/logout':
                 if self.rest._client.loggedin == True:
                     self.rest._client.disconnect(wait=True)
-                    self.wfile.write('Logout Successfully!')
+                    self.wfile.write('Logout Successfully!\n')
                     self.rest._client.loggedin = False
                     self.rest._client.joinmuc = False
                 else:
-                    self.wfile.write('Logout already!')
+                    self.wfile.write('Logout already!\n')
             elif self.path == '/control/friends':
                 if self.rest._client.loggedin == False:
-                    self.wfile.write('Login first!')
+                    self.wfile.write('Login first!\n')
                 else:
                     self.control_friends('all')
             elif self.path == '/control/friends:online':
                 if self.rest._client.loggedin == False:
-                    self.wfile.write('Login first!')
+                    self.wfile.write('Login first!\n')
                 else:
                     self.control_friends('online')
             elif self.path == '/control/friends:offline':
                 if self.rest._client.loggedin == False:
-                    self.wfile.write('Login first!')
+                    self.wfile.write('Login first!\n')
                 else:
                     self.control_friends('offline')
 				
             elif self.path == '/control/join':
                 if self.rest._client.loggedin == False:
-                    self.wfile.write('Login first!')
+                    self.wfile.write('Login first!\n')
                 else:
                     if self.rest._client.joinmuc == False:
                         self.rest._client.join_muc()
-                        self.wfile.write('Join muc Successfully!')
+                        self.wfile.write('Join muc Successfully!\n')
                         self.rest._client.joinmuc = True
                     else:
-                        self.wfile.write('Joined already!')
+                        self.wfile.write('Joined already!\n')
                         
 
             else:
-                self.wfile.write('Path [%s] is not supported yet!' % self.path)
+                self.wfile.write('Path [%s] is not supported yet!\n' % self.path)
 
         except Exception as ex:
             self.send_response(400)
@@ -152,17 +152,17 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         group_empty_flag = False
                         self.wfile.write('\n\n[jid]:              %s'%jid)
                         self.wfile.write('\n[status]:           offline')
-                        self.wfile.write('\n[subscription]:     %s'%subscription)
+                        self.wfile.write('\n[subscription]:     %s\n'%subscription)
                 else:
                     if status == 'online' or status == 'all':
                         group_empty_flag = False
                         self.wfile.write('\n\n[jid]:              %s'%jid)
                         self.wfile.write('\n[status]:           online')
-                        self.wfile.write('\n[subscription]:     %s'%subscription)
+                        self.wfile.write('\n[subscription]:     %s\n'%subscription)
                     connections_items = connections.items()
                     self.log.debug('connections_items:%s' %connections_items, extra={'namespace': 'xmpp'})
             if group_empty_flag :
-                self.wfile.write('\n no results in this group!')
+                self.wfile.write('\n no results in this group!\n')
 
 
 class RestServer(threading.Thread):
@@ -176,7 +176,7 @@ class RestServer(threading.Thread):
     _port = 0;
     _starttime = None
 
-    def __init__(self, host, port, server, server_port, jid, password, friend_pattern, group):
+    def __init__(self, host, port, server, server_port, jid, password, friend_pattern, group, room, nick):
         """
         The constructor for Rest Server
         """
@@ -184,11 +184,17 @@ class RestServer(threading.Thread):
         self._host = host
         self._port = port
         ApiRequestHandler.rest = self
+        self.log = logging.getLogger('cement:app:xmpp')
+        self.log.debug('Rest Server Initialized before creat http server...', extra={'namespace': 'xmpp'})
+        self.log.debug('host:%s... port :%s'%(self._host,self._port), extra={'namespace': 'xmpp'})
         self._server = BaseHTTPServer.HTTPServer((self._host, self._port), ApiRequestHandler)
         self.log = logging.getLogger('cement:app:xmpp')
-        self._client = Client(jid, password, server, server_port,friend_pattern,group)
+        self.log.debug('server:%s... port :%s'%(self._server,self._port), extra={'namespace': 'xmpp'})
+        self._client = Client(jid, password, server, server_port, friend_pattern, group, room, nick)
+        self.log.debug('client:%s... '%(self._client), extra={'namespace': 'xmpp'})
         self.log.debug('Rest Server Initialized...', extra={'namespace': 'xmpp'})
         self._starttime = datetime.datetime.now()
+        self.log.debug('starttime:%s... '%(self._starttime), extra={'namespace': 'xmpp'})
 
     def stop(self):
         """
