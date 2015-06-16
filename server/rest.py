@@ -79,6 +79,8 @@ class ApiRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if self.rest._client.loggedin == False:
                     if self.rest._client.login():
                         self.wfile.write('Login Successfully!\n')
+                    else:
+                        self.wfile.write('Login failed, please check!\n')
                 else:
                     self.wfile.write('Login already!\n')
             elif self.path == '/control/logout':

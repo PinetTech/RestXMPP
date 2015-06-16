@@ -47,6 +47,8 @@ class Client(ClientXMPP):
         self._log = logging.getLogger("cement:app:xmpp")
         self.ssl_version = ssl.PROTOCOL_SSLv3
         self._log.info('XMPP client initialized...', extra={'namespace' : 'xmpp'})
+        if self._server_port != 5222:
+            self._log.info('server_port:%s is not default value!'%(self._server_port), extra={'namespace' : 'xmpp'})
         
         self.register_plugin('xep_0030') # Service Discovery
         self.register_plugin('xep_0045') # Multi-User Chat
@@ -80,43 +82,62 @@ class Client(ClientXMPP):
                    how it may be used.
         """
         if msg['type'] in ('chat', 'normal'):
-            msg_decode = msg['body'].decode('utf-8')
-            self._log.debug('Receive msg_decode:%s' %msg_decode, extra={'namespace' : 'xmpp'})
-            try:
-                eval(msg_decode)
-            except Exception,e :
-                self._log.debug('is not json!!', extra={'namespace' : 'xmpp'})
-                msg.reply("%s : is not json format!" % msg_decode).send()
-                return
-            try:
-                data = json.loads(msg_decode)
-            except TypeError, err:
-                self._log.debug('error:%s' %err, extra={'namespace' : 'xmpp'})
-                msg.reply("error:%s" % err).send()
-                return
-            result = callback_handle(data)
-            data[u'result'] = result.decode('utf-8')
-            encodedjson = json.dumps(data)
-            msg_ret = encodedjson.decode('ascii')
-            msg.reply("\n%s" % msg_ret).send()
-            
+            self.analysis_msg(msg)
 
         elif msg['type'] == 'groupchat':
             self._log.info('Receive groupchat message:%s' %msg, extra={'namespace' : 'xmpp'})
             if msg['mucnick'] != self.nick:
-                self.send_message(mto=msg['from'].bare,
-                                  mbody="I heard that, %s." % msg['mucnick'],
-                                  mtype='groupchat')
+                self.analysis_msg(msg)
+
         return 
+
+    def analysis_msg(self,msg):
+        msg_decode = msg['body'].decode('utf-8')
+        self._log.debug('Receive msg_decode:%s' %msg_decode, extra={'namespace' : 'xmpp'})
+        msg_ret = {}
+        try:
+            eval(msg_decode)
+        except Exception,e :
+            self._log.debug('is not json!!', extra={'namespace' : 'xmpp'})
+            msg_ret['result'] = "msg is not json format!"
+            self.reply_msg(msg,msg_ret) 
+            return 
+        try:
+            data = json.loads(msg_decode)
+        except TypeError, err:
+            self._log.debug('error:%s' %err, extra={'namespace' : 'xmpp'})
+            msg_ret['result'] = "msg load error!"
+            return msg_ret
+        for (k,v) in data.items(): 
+            self._log.debug('val is :%s'%k, extra={'namespace' : 'xmpp'})
+            if k == 'result':
+                msg_ret['result'] = "is_reply"
+                return 
+        result = callback_handle(data)
+
+        data[u'result'] = result.decode('utf-8')
+        encodedjson = json.dumps(data)
+        msg_ret = encodedjson.decode('ascii')
+        self.reply_msg(msg,msg_ret) 
+        return 
+
+    def reply_msg(self,msg_src,msg_reply):
+        msg_src.reply("\n%s" % msg_reply).send()
+        return
 
     def login(self):
         """
         Login to jabber server
         """
-        self.connect()
-        self.process()
-        self.loggedin = True
-        return True
+        if self.connect((self._server,self._server_port),reattempt = False):
+            self._log.info('Connected !...', extra={'namespace' : 'xmpp'})
+            self.process()
+            self.loggedin = True
+            return True
+        else:
+            self.loggedin = False 
+            self._log.info('Connect failed!...', extra={'namespace' : 'xmpp'})
+            return False 
 
     def subscribe(self, pres):
         """
