@@ -1,6 +1,7 @@
 from callback import Callback
 import commands
 import logging
+import subprocess
 
 class Download(Callback):
     def __init__(self):
@@ -31,17 +32,29 @@ class Download(Callback):
 
             if output == md5:
                 process = getattr(self,ok_hdl)
-                process()
+                process(path, filename)
                 result = 'OK' 
             else :
                 process = getattr(self,err_hdl)
-                process()
+                process(path, filename)
                 result = 'md5 check error'
         return result 
 
-    def err_hdl_1(self, args = None):
-        self.log.info('process errors...', extra={'namespace' : 'xmpp'})
+    def ok_hdl_1(self, file_path, file_name):
+        self.log.info('process ok condition...', extra={'namespace' : 'xmpp'})
+        path = '/usr/local/src/RestXMPP/bin/'
+        cmd = 'cd %s ; sh download_ok_hdlr %s %s '%(path, file_path, file_name) 
+        self.log.debug('cmd:%s  '%cmd, extra={'namespace' : 'xmpp'})
+        ret = subprocess.call(cmd,shell = True)
+        self.log.info('ret:%s...'%ret, extra={'namespace' : 'xmpp'})
+        return ret 
 
-    def ok_hdl_1(self, args = None):
-        self.log.info('process success...', extra={'namespace' : 'xmpp'})
+    def err_hdl_1(self, file_path, file_name):
+        self.log.info('process error condition...', extra={'namespace' : 'xmpp'})
+        path = '/usr/local/src/RestXMPP/bin/'
+        cmd = 'cd %s ; sh download_err_hdlr %s %s '%(path, file_path, file_name) 
+        self.log.debug('cmd:%s  '%cmd, extra={'namespace' : 'xmpp'})
+        ret = subprocess.call(cmd,shell = True)
+        self.log.info('ret:%s...'%ret, extra={'namespace' : 'xmpp'})
+        return ret 
 

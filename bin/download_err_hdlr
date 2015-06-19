@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo Starting  to process download error 
+cd $1
+pwd
+rm -rf $2
+echo Done
+
