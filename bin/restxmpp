@@ -2,7 +2,7 @@
 
 
 # Prepare the configurations
-path=/home/kallun/XMPP/RestXMPP/
+path=/usr/local/src/RestXMPP
 pid=/run/restxmpp.pid
 
 start() {
