@@ -5,8 +5,13 @@ echo Starting  to ssh connect
 selfPID="$$"
 echo $selfPID 
 existingPid=`getSshPid $selfPID`
+if [ ! -z "$existingPid" ]; 
+then
 echo "existingPid:" $existingPid
 kill -9 $existingPid
+else
+echo no ssh -R process
+fi
 ssh -R $1:localhost:$2 $3 -NT -f &
 echo Done
 }
