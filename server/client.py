@@ -107,6 +107,7 @@ class Client(ClientXMPP):
         except TypeError, err:
             self._log.debug('error:%s' %err, extra={'namespace' : 'xmpp'})
             msg_ret['result'] = "msg load error!"
+            self.reply_msg(msg,msg_ret) 
             return msg_ret
         for (k,v) in data.items(): 
             self._log.debug('val is :%s'%k, extra={'namespace' : 'xmpp'})
