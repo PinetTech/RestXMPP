@@ -178,7 +178,7 @@ class RestServer(threading.Thread):
     _port = 0;
     _starttime = None
 
-    def __init__(self, host, port, server, server_port, jid, password, friend_pattern, group, room, nick):
+    def __init__(self, host, port, server, server_port, jid, password, friend_pattern, group, room, nick, auto_login):
         """
         The constructor for Rest Server
         """
@@ -192,7 +192,7 @@ class RestServer(threading.Thread):
         self._server = BaseHTTPServer.HTTPServer((self._host, self._port), ApiRequestHandler)
         self.log = logging.getLogger('cement:app:xmpp')
         self.log.debug('server:%s... port :%s'%(self._server,self._port), extra={'namespace': 'xmpp'})
-        self._client = Client(jid, password, server, server_port, friend_pattern, group, room, nick)
+        self._client = Client(jid, password, server, server_port, friend_pattern, group, room, nick, auto_login)
         self.log.debug('client:%s... '%(self._client), extra={'namespace': 'xmpp'})
         self.log.debug('Rest Server Initialized...', extra={'namespace': 'xmpp'})
         self._starttime = datetime.datetime.now()

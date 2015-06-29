@@ -113,7 +113,8 @@ class ServiceLocator:
             defaults['xmpp']['friend_default_group'] = 'pinet_friends'
             defaults['xmpp']['room'] = "misc@conference.pinet.cc"
             defaults['xmpp']['nick'] = "test1" 
-
+            defaults['xmpp']['auto_login'] = 'false'
+            
             # Initialize the application object
             self._app = App('xmpp', config_defaults=defaults)
         return self._app
@@ -144,7 +145,8 @@ class ServiceLocator:
             group = config.get('xmpp', 'friend_default_group')
             room = config.get('xmpp', 'room')
             nick = config.get('xmpp', 'nick')
-            self.log().info('jid:%s password:%s server:%s server_port:%s friend_pattern:%s group:%s room:%s nick:%s'%(jid, password, server, server_port, friend_pattern, group, room, nick))
+            auto_login = "true" == str(config.get('xmpp', 'auto_login'))
+            self.log().info('jid:%s password:%s server:%s server_port:%s friend_pattern:%s group:%s room:%s nick:%s auto_login:%s'%(jid, password, server, server_port, friend_pattern, group, room, nick, auto_login))
             if not server:
                 self.log().info('Can\'t find jabber server configuration')
                 return None
@@ -159,6 +161,6 @@ class ServiceLocator:
             port_str = self.app().config.get('xmpp', 'port')
             port =  int(port_str)
             self.log().info('host:%s port :%s'%(host, port ))
-            self._rest = RestServer(host,port, server, server_port, jid, password, friend_pattern, group, room, nick) 
+            self._rest = RestServer(host,port, server, server_port, jid, password, friend_pattern, group, room, nick, auto_login) 
             self.log().info('self._rest:%s '%(self._rest))
         return self._rest
